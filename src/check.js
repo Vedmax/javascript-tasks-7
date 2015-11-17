@@ -18,7 +18,7 @@ function getAllFunctions() {
     return {
         hasKeys: function (args) {
             if (isNotCorrectType(Object.getPrototypeOf(this), [Array, Object])) {
-                console.error('TypeError: hasKeys is not a function');
+                console.error('TypeError: hasKeys is not a function!');
                 return undefined;
             }
             for (var i = 0; i < args.length; i++) {
