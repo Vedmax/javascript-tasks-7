@@ -2,25 +2,43 @@
 
 exports.init = function () {
     Object.defineProperty(Object.prototype, 'check', {
-        get: getBindFunctions
+        get: getBindedFunctions
     });
 };
 
-function getBindFunctions() {
+function getBindedFunctions() {
+    var acceptableFunctions = [
+        ['hasKeys', 'hasValueType', 'hasLength','containsValues', 'hasValues'],
+        ['hasKeys', 'hasValueType', 'containsValues', 'hasValues'],
+        ['hasWordsCount', 'hasLength'],
+        ['hasParamsCount']
+    ];
     var functions = getAllFunctions();
-    for (var func in functions) {
-        functions[func] = functions[func].bind(this);
+    var result = getAcceptableFunctions(acceptableFunctions, this, functions);
+    for (var func in result) {
+        result[func] = result[func].bind(this);
     }
-    return functions;
+    return result;
+}
+
+function getAcceptableFunctions(acceptableFunctions, obj, functions) {
+    var prot = Object.getPrototypeOf(obj);
+    var index = [Array, Object, String, Function];
+    for (var i = 0; i < index.length; i++) {
+        if (index[i].prototype === prot) {
+            var comparableFunctions = acceptableFunctions[i];
+        }
+    }
+    var res = {};
+    for (i = 0; i < comparableFunctions.length; i++) {
+        res[comparableFunctions[i]] = functions[comparableFunctions[i]];
+    }
+    return res;
 }
 
 function getAllFunctions() {
     return {
         hasKeys: function (args) {
-            if (isNotCorrectType(Object.getPrototypeOf(this), [Array, Object])) {
-                console.error('TypeError: hasKeys is not a function!');
-                return undefined;
-            }
             for (var i = 0; i < args.length; i++) {
                 if (!this.hasOwnProperty(args[i])) {
                     return false;
@@ -30,10 +48,6 @@ function getAllFunctions() {
         },
 
         hasValueType: function (prop, type) {
-            if (isNotCorrectType(Object.getPrototypeOf(this), [Array, Object])) {
-                console.error('TypeError: hasValueType is not a function');
-                return undefined;
-            }
             if (!this.hasOwnProperty(prop)) {
                 return false;
             }
@@ -41,22 +55,14 @@ function getAllFunctions() {
             if (type === 'array') {
                 return Object.getPrototypeOf(this[prop]) === Array.prototype;
             }
-            return type === typeof this[prop];
+            return typeof this[prop] === null ? type === null : type === typeof this[prop];
         },
 
         hasLength: function (length) {
-            if (isNotCorrectType(Object.getPrototypeOf(this), [Array, String])) {
-                console.error('TypeError: hasLength is not a function');
-                return undefined;
-            }
             return this.length === length;
         },
 
         hasValues: function (values) {
-            if (isNotCorrectType(Object.getPrototypeOf(this), [Array, Object])) {
-                console.error('TypeError: hasValues is not a function');
-                return undefined;
-            }
             for (var i = 0; i < this.length; i++) {
                 if (values.indexOf(this[i]) === -1) {
                     return false;
@@ -66,41 +72,17 @@ function getAllFunctions() {
         },
 
         hasParamsCount: function (count) {
-            if (isNotCorrectType(Object.getPrototypeOf(this), [Function])) {
-                console.error('TypeError: hasParamsCount is not a function');
-                return undefined;
-            }
             return this.length === count;
         },
 
         hasWordsCount: function (count) {
-            if (isNotCorrectType(Object.getPrototypeOf(this), [String])) {
-                console.error('TypeError: hasWordsCount is not a function');
-                return undefined;
-            }
-            return this.split(' ').length === count;
+            return this.trim().split(' ').length === count;
         },
 
         containsValues: function (values) {
-            if (isNotCorrectType(Object.getPrototypeOf(this), [Array, Object])) {
-                console.error('TypeError: containsValues is not a function');
-                return undefined;
-            }
-            for (var i = 0; i < values.length; i++) {
-                if (this.indexOf(values[i]) === -1) {
-                    return false;
-                }
-            }
-            return true;
+            return values.every(function (x) {
+                return this.indexOf(x) !== -1;
+            }, this);
         }
     };
-
-    function isNotCorrectType(prototype, correctTypes) {
-        for (var i = 0; i < correctTypes.length; i++) {
-            if (prototype === correctTypes[i].prototype) {
-                return false;
-            }
-        }
-        return true;
-    }
 }
