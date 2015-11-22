@@ -7,30 +7,33 @@ exports.init = function () {
 };
 
 function getBindedFunctions() {
-    var acceptableFunctions = [
-        ['hasKeys', 'hasValueType', 'hasLength','containsValues', 'hasValues'],
-        ['hasKeys', 'hasValueType', 'containsValues', 'hasValues'],
-        ['hasWordsCount', 'hasLength'],
-        ['hasParamsCount']
-    ];
+
     var functions = getAllFunctions();
-    var result = getAcceptableFunctions(acceptableFunctions, this, functions);
+    var result = getAcceptableFunctions(this, functions);
     for (var func in result) {
         result[func] = result[func].bind(this);
     }
     return result;
 }
 
-function getAcceptableFunctions(acceptableFunctions, obj, functions) {
+function getAcceptableFunctions(obj, functions) {
     var prot = Object.getPrototypeOf(obj);
-    var index = [Array, Object, String, Function];
-    for (var i = 0; i < index.length; i++) {
-        if (index[i].prototype === prot) {
-            var comparableFunctions = acceptableFunctions[i];
-        }
+    if (prot === Array.prototype) {
+        var comparableFunctions = ['hasKeys', 'hasValueType',
+                'hasLength','containsValues', 'hasValues'];
+    }
+    if (prot === Object.prototype) {
+        var comparableFunctions = ['hasKeys', 'hasValueType',
+            'containsValues', 'hasValues'];
+    }
+    if (prot === String.prototype) {
+        var comparableFunctions = ['hasWordsCount', 'hasLength'];
+    }
+    if (prot === Function.prototype) {
+        var comparableFunctions = ['hasParamsCount'];
     }
     var res = {};
-    for (i = 0; i < comparableFunctions.length; i++) {
+    for (var i = 0; i < comparableFunctions.length; i++) {
         res[comparableFunctions[i]] = functions[comparableFunctions[i]];
     }
     return res;
@@ -55,7 +58,7 @@ function getAllFunctions() {
             if (type === 'array') {
                 return Object.getPrototypeOf(this[prop]) === Array.prototype;
             }
-            return typeof this[prop] === null ? type === null : type === typeof this[prop];
+            return this[prop] === null ? false : type === typeof this[prop];
         },
 
         hasLength: function (length) {
@@ -76,12 +79,12 @@ function getAllFunctions() {
         },
 
         hasWordsCount: function (count) {
-            return this.trim().split(' ').length === count;
+            return this.trim().split(/\s+/).length === count;
         },
 
         containsValues: function (values) {
-            return values.every(function (x) {
-                return this.indexOf(x) !== -1;
+            return values.every(function (value) {
+                return this.indexOf(value) !== -1;
             }, this);
         }
     };
