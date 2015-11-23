@@ -6,37 +6,41 @@ exports.init = function () {
     });
 };
 
-function getBindedFunctions() {
+var functions = getAllFunctions();
 
-    var functions = getAllFunctions();
-    var result = getAcceptableFunctions(this, functions);
+function getBindedFunctions() {
+    var result = getComparrableFunctions(this);
+    result = getAcceptableFunctions(result);
     for (var func in result) {
         result[func] = result[func].bind(this);
     }
     return result;
 }
 
-function getAcceptableFunctions(obj, functions) {
+function getAcceptableFunctions(comparableFunctions) {
+    return comparableFunctions.reduce(function (result, name) {
+        result[name] = functions[name];
+
+        return result;
+    }, {});
+}
+
+function getComparrableFunctions(obj) {
     var prot = Object.getPrototypeOf(obj);
     if (prot === Array.prototype) {
-        var comparableFunctions = ['hasKeys', 'hasValueType',
+        return ['hasKeys', 'hasValueType',
                 'hasLength','containsValues', 'hasValues'];
     }
     if (prot === Object.prototype) {
-        var comparableFunctions = ['hasKeys', 'hasValueType',
+        return ['hasKeys', 'hasValueType',
             'containsValues', 'hasValues'];
     }
     if (prot === String.prototype) {
-        var comparableFunctions = ['hasWordsCount', 'hasLength'];
+        return ['hasWordsCount', 'hasLength'];
     }
     if (prot === Function.prototype) {
-        var comparableFunctions = ['hasParamsCount'];
+        return ['hasParamsCount'];
     }
-    var res = {};
-    for (var i = 0; i < comparableFunctions.length; i++) {
-        res[comparableFunctions[i]] = functions[comparableFunctions[i]];
-    }
-    return res;
 }
 
 function getAllFunctions() {
@@ -58,7 +62,8 @@ function getAllFunctions() {
             if (type === 'array') {
                 return Object.getPrototypeOf(this[prop]) === Array.prototype;
             }
-            return this[prop] === null ? false : type === typeof this[prop];
+            return this[prop] === null ? false :
+            Object.prototype.toString.call(this[prop]) === Object.prototype.toString.call(type);
         },
 
         hasLength: function (length) {
