@@ -6,8 +6,6 @@ exports.init = function () {
     });
 };
 
-var functions = getAllFunctions();
-
 function getBindedFunctions() {
     var result = getComparrableFunctions(this);
     result = getAcceptableFunctions(result);
@@ -43,54 +41,49 @@ function getComparrableFunctions(obj) {
     }
 }
 
-function getAllFunctions() {
-    return {
-        hasKeys: function (args) {
-            for (var i = 0; i < args.length; i++) {
-                if (!this.hasOwnProperty(args[i])) {
-                    return false;
-                }
-            }
-            return true;
-        },
-
-        hasValueType: function (prop, type) {
-            if (!this.hasOwnProperty(prop)) {
+var functions = {
+    hasKeys: function (args) {
+        for (var i = 0; i < args.length; i++) {
+            if (!this.hasOwnProperty(args[i])) {
                 return false;
             }
-            type = type.toString().slice(9, -20).toLocaleLowerCase();
-            if (type === 'array') {
-                return Object.getPrototypeOf(this[prop]) === Array.prototype;
-            }
-            return this[prop] === null ? false :
-            Object.prototype.toString.call(this[prop]) === Object.prototype.toString.call(type);
-        },
-
-        hasLength: function (length) {
-            return this.length === length;
-        },
-
-        hasValues: function (values) {
-            for (var i = 0; i < this.length; i++) {
-                if (values.indexOf(this[i]) === -1) {
-                    return false;
-                }
-            }
-            return true;
-        },
-
-        hasParamsCount: function (count) {
-            return this.length === count;
-        },
-
-        hasWordsCount: function (count) {
-            return this.trim().split(/\s+/).length === count;
-        },
-
-        containsValues: function (values) {
-            return values.every(function (value) {
-                return this.indexOf(value) !== -1;
-            }, this);
         }
-    };
-}
+        return true;
+    },
+
+    hasValueType: function (prop, Type) {
+        if (this[prop] === null) {
+            return false;
+        }
+        return Object.prototype.toString.call(this[prop]) ===
+            Object.prototype.toString.call(new Type());
+
+    },
+
+    hasLength: function (length) {
+        return this.length === length;
+    },
+
+    hasValues: function (values) {
+        for (var i = 0; i < this.length; i++) {
+            if (values.indexOf(this[i]) === -1) {
+                return false;
+            }
+        }
+        return true;
+    },
+
+    hasParamsCount: function (count) {
+        return this.length === count;
+    },
+
+    hasWordsCount: function (count) {
+        return this.trim().split(/\s+/).length === count;
+    },
+
+    containsValues: function (values) {
+        return values.every(function (value) {
+            return this.indexOf(value) !== -1;
+        }, this);
+    }
+};
